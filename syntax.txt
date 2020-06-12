@@ -1,0 +1,48 @@
+
+Two syntaxes: high-level and low-level
+
+## High-level syntax
+
+File extension: .sm
+
+// Comments
+
+ident  := [A-Za-z0-9_-]+
+lit    := -?[0-9][0-9_]*
+binop  := '+' | '-' | '*'
+expr   := ident
+        | 'ident
+        | lit
+        | '{' expr '}'
+        | binop
+        | expr expr
+
+Not for now:
+--         | '(' infix-expr ')'
+--         | '(' ident... '=>' infix-expr ')'
+-- infix-expr := ident
+--             | lit
+--             | '(' infix-expr ')'
+--             | infix-expr binop infix-expr
+--             | '-' infix-expr
+--             | '~' infix-expr
+--             | '[' expr ']'
+--             | ident '(' infix-expr [',' infix-expr...] ')'
+
+type   := ident
+        | '(' type* '--' type* ')'
+
+def    := 'def' ident ':' type '{' expr '}'
+        | 'typedef' ident type
+toplevel := def*
+
+
+def my-func : (int -- ) {
+    // contents ...
+}
+
+## Assembly syntax
+
+File extension: .asm
+
+

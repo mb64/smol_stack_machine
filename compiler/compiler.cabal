@@ -1,0 +1,24 @@
+cabal-version:       >=1.10
+
+name:                compiler
+version:             0.1.0.0
+-- synopsis:
+description:         Assembler/compiler for the simple stack processor
+-- bug-reports:
+license:             MIT
+license-file:        LICENSE
+author:              Mark Barbone
+maintainer:          mark.l.barbone@gmail.com
+-- copyright:
+-- category:
+build-type:          Simple
+
+executable assembler
+  main-is:             Main.hs
+  other-modules:       Lexer, Parser, AST, IR
+  -- other-extensions:
+  build-depends:       base >=4.14 && <4.15, array >= 0.5, containers >= 0.6, transformers >= 0.5, mtl >= 2.2
+  build-tools:         alex, happy
+  hs-source-dirs:      src
+  ghc-options:         -Wall
+  default-language:    Haskell2010
