@@ -1,10 +1,13 @@
-{ -- vim:ft=happy
+{
+-- vim:ft=happy
+{-# LANGUAGE DataKinds #-}
+
 module Parser (parse) where
+
+import Data.Word
 
 import AST
 import Lexer
-
-import Data.Word
 }
 
 %name parse
@@ -13,15 +16,21 @@ import Data.Word
 
 %token
     '{'     {TOpenBrace}
-    '}'     {TClosedBrace}
+    '}'     {TCloseBrace}
+    '('     {TOpenParen}
+    ')'     {TCloseParen}
+    ':'     {TColon}
+    '--'    {TStackSep}
     'def'   {TDef}
+    'macro' {TMacro}
+    'typedef' {TTypeDef}
     lit     {TLit $$}
     ident   {TIdent $$}
     quot    {TQuotedIdent $$}
 
 %%
 
-Res     :: {[Def]}
+Res     :: {[Def 'True 'True]}
         :           {[]}
         | Def Res   {$1:$2}
 
@@ -29,18 +38,31 @@ Res     :: {[Def]}
 Lit     :: {Word8}
         : lit       {toWord $1}
 
-Atom    :: {Atom}
-        : ident         {Name $1}
-        | quot          {LitName $1}
-        | Lit           {Lit $1}
-        | '{' Expr '}'  {Lambda $2}
+Atom    :: {Atom 'True}
+        : ident                 {Name $1}
+        | quot                  {LitName $1}
+        | Lit                   {Lit $1}
+        | '{' FunType Expr '}'  {Lambda $2 $3}
 
-Expr    :: {Expr}
+Expr    :: {Expr 'True}
         :               {[]}
         | Atom Expr     {$1:$2}
 
-Def     :: {Def}
-        : 'def' ident '{' Expr '}'  {Def $2 $4}
+FunType :: {Type}
+        : '(' Types '--' Types ')'  {FunT $2 $4}
+
+Type    :: {Type}
+        : ident     {NameT $1}
+        | FunType   {$1}
+
+Types   :: {[Type]}
+        :               {[]}
+        | Type Types    {$1:$2}
+
+Def     :: {Def 'True 'True}
+        : 'def' ident ':' FunType '{' Expr '}'  {Def $2 $4 $6}
+        | 'macro' ident '{' Expr '}'            {Macro $2 $4}
+        | 'typedef' ident Type                  {TypeDef $2 $3}
 
 {
 parseError :: [Token] -> a

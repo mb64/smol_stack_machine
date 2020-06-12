@@ -13,7 +13,7 @@ binop  := '+' | '-' | '*'
 expr   := ident
         | 'ident
         | lit
-        | '{' expr '}'
+        | '{' funtype expr '}'
         | binop
         | expr expr
 
@@ -29,10 +29,11 @@ Not for now:
 --             | '[' expr ']'
 --             | ident '(' infix-expr [',' infix-expr...] ')'
 
+funtype := '(' type* '--' type* ')'
 type   := ident
-        | '(' type* '--' type* ')'
+        | funtype
 
-def    := 'def' ident ':' type '{' expr '}'
+def    := 'def' ident ':' funtype '{' expr '}'
         | 'typedef' ident type
 toplevel := def*
 

@@ -15,17 +15,25 @@ tokens :-
     @declit         {TLit . read . filter (/= '_')}
     @hexlit         {TLit . read . filter (/= '_')}
     "{"             {const TOpenBrace}
-    "}"             {const TClosedBrace}
+    "}"             {const TCloseBrace}
+    "("             {const TOpenParen}
+    ")"             {const TCloseParen}
+    ":"             {const TColon}
+    "--"            {const TStackSep}
+    "+"             {const $ TIdent "add"}
+    "-"             {const $ TIdent "sub"}
+    "*"             {const $ TIdent "mul"}
     "def"           {const TDef}
-    "+"             {TIdent}
-    "-"             {TIdent}
-    "*"             {TIdent}
+    "macro"         {const TMacro}
+    "typedef"       {const TTypeDef}
     "'"$identchar+  {TQuotedIdent . tail}
     $identchar+     {TIdent}
 
 {
-data Token = TDef
-    | TOpenBrace | TClosedBrace
+data Token = TDef | TMacro | TTypeDef
+    | TOpenBrace | TCloseBrace
+    | TOpenParen | TCloseParen
+    | TStackSep | TColon
     | TLit Integer
     | TIdent String
     | TQuotedIdent String
