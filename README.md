@@ -17,7 +17,7 @@ Everything in this repository is MIT-licensed.
 
 ```
 Byte    Name        Action/Comment
-------------------------------
+----------------------------------
 0x00    send        ( value -- ) [value is sent to the screen]
 0x01    jmp         ( ip -- )
 0x02    skip        ( cond -- ) [ if cond & 0x80 then skip the next instruction byte ]
