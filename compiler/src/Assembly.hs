@@ -1,5 +1,6 @@
 module Assembly where
 
+import Data.Char
 import Data.Word
 
 data Lit = LitInt Word8
@@ -23,3 +24,14 @@ data Instr a = Send
 data Label = Lbl String
            | GenLbl Int
            deriving (Show, Eq, Ord)
+
+type Assembly = [Either Label (Instr Lit)]
+
+prettyPrintAsm :: Assembly -> String
+prettyPrintAsm = unlines . map one
+  where one (Left (Lbl s)) = s ++ ":"
+        one (Left (GenLbl n)) = ".l" ++ show n ++ ":"
+        one (Right (Imm (LitInt x))) = "    imm " ++ show x
+        one (Right (Imm (LitLbl (Lbl s)))) = "    imm " ++ s
+        one (Right (Imm (LitLbl (GenLbl n)))) = "    imm .l" ++ show n
+        one (Right i) = "    " ++ map toLower (show i)

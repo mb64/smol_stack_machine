@@ -12,7 +12,7 @@ import Text.Read
 import qualified AST
 import AST (Ident)
 import qualified Assembly as Asm
-import Assembly (Lit(..), Instr, Label(..))
+import Assembly (Assembly, Lit(..), Label(..))
 
 data Prim = Send
           | Drop
@@ -57,9 +57,9 @@ data Def = Def Ident Expr
 
 lowerDef :: AST.Def 'False 'False -> Def
 lowerDef (AST.Def n (AST.FunT ins outs) e) = Def n $ execWriter $ do
-    tell [Prim $ RotB $ length ins]
+    tell [Prim $ RotB $ length ins + 1]
     traverse_ (tell . lowerA) e
-    tell [Prim $ Rot $ length outs]
+    tell [Prim $ Rot $ length outs + 1]
     tell [Prim $ Ret]
   where lowerA :: AST.Atom 'False -> Expr
         lowerA (AST.Name name) = case primName name of
@@ -74,16 +74,16 @@ type LblGenM = State Int
 genLbl :: LblGenM Label
 genLbl = state $ \n -> (GenLbl n, n+1)
 
-compileDef :: Def -> LblGenM [Either Label (Instr Lit)]
+compileDef :: Def -> LblGenM Assembly
 compileDef (Def n e) = do
     e' <- traverse compileA e
     pure $ Left (Lbl n) : concat e'
-  where compileA :: Atom -> LblGenM [Either Label (Instr Lit)]
+  where compileA :: Atom -> LblGenM Assembly
         compileA (Lit x) = pure [Right $ Asm.Imm $ LitInt x]
         compileA (LitName i) = pure [Right $ Asm.Imm $ LitLbl (Lbl i)]
         compileA (Prim p) = compileP p
 
-        compileP :: Prim -> LblGenM [Either Label (Instr Lit)]
+        compileP :: Prim -> LblGenM Assembly
         compileP Send = pure [Right Asm.Send]
         compileP Drop = pure [Right Asm.Drop]
         compileP Add = pure [Right Asm.Add]
