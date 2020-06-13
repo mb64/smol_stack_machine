@@ -8,6 +8,7 @@ Everything in this repository is MIT-licensed.
 
  - Stack-based
  - No registers
+ - Combined data and call stack
  - 8-bit words, 8-bit instructions, 8-bit IP
  - Harvard architecture
  - Stack is not memory-addressable
@@ -26,13 +27,14 @@ Byte    Name        Action/Comment
 0x05    not         ( a -- ~a )         [ALU]
 0x06    swap        ( a b -- b a )      [ALU]
 0x07    dup         ( a -- a a )
-0x08    ressurect   ( -- a ) [only legal soon after a drop]
+0x08    resurrect   ( -- a ) [See graveyard.md for specific semantics]
 0x09    imm         ( -- x ) [single-byte immediate follows the instruction]
 others  nop         ( -- )
 ```
 
-I don't like `ressurect`, since it's really hacky, but it's the simplest way to make it
-possible to do stack rotations.
+I don't like `resurrect`, since it seems hacky, but with well-defined
+semantics, it's tolerable.
+It's the easiest way to make stack rotations possible.
 
 ## Goals
 
@@ -82,7 +84,7 @@ Since the address is on the stack, `ret` is just `jmp`.
     swap    ; Stack: A C B
     drop    ; Stack: A C [B]
     swap    ; Stack: C A [B]
-    ressurect
+    resurrect
     ; Stack: C A B
 ```
 The other direction is done similarly.
