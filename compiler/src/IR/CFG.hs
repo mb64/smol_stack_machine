@@ -1,7 +1,7 @@
 -- Control flow graph
 {-# LANGUAGE LambdaCase #-}
 
-module IR.CFG 
+module IR.CFG
     ( SegId
     , Cont(..)
     , Segment(..)
@@ -125,7 +125,7 @@ mergeIdentical (Prog segMap segs) = Prog newSegMap newSegs
         replaceC Ret = Ret
 
         newSegMap = fmap replace segMap
-        newSegs = map (\(Segment i p c) -> Segment i p $ replaceC c) 
+        newSegs = map (\(Segment i p c) -> Segment i p $ replaceC c)
             $ filter (\(Segment i _ _) -> i `Map.notMember` replaceMap) segs
 
 simplEmpty :: Prog -> Prog

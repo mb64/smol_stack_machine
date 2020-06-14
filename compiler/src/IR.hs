@@ -14,6 +14,7 @@ data Prim = Send
           | Add
           | Not
           | Call String
+          | VCall
           | Lit Lit
           | Swap
           | Dup
@@ -26,6 +27,7 @@ primName "send" = Just Send
 primName "drop" = Just Drop
 primName "add" = Just Add
 primName "not" = Just Not
+primName "call" = Just VCall
 primName "swap" = Just Swap
 primName "dup" = Just Dup
 primName name
