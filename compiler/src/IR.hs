@@ -70,7 +70,7 @@ lowerDef (AST.Def _ _ _) = error "internal error: bad type"
 --  - Simplification: remove empty Always, empty Ret
 -- In Layout:
 --  - Dead code elimination: remove unreachable segments
---  - TODO Layout: Select a single linear layout
+--  - Layout: Select a single linear layout
 -- In CodeGen:
 --  - TODO Linear compiling: [Prim] -> [Instr Lit]
 --  - TODO Peephole opts on Instr Lit

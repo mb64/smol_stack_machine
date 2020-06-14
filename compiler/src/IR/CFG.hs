@@ -174,7 +174,7 @@ validateProg (Prog segMap segs) = all exists segMap && all goodSeg segs
         exists i = any (\(Segment i' _ _) -> i == i') segs
 
         goodCont :: Cont -> Bool
-        goodCont (IfC i e) = exists i && exists e && i != e
+        goodCont (IfC i e) = exists i && exists e && i /= e
         goodCont (Always i) = exists i
         goodCont Ret = True
 
