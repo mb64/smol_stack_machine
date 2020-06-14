@@ -128,6 +128,15 @@ mergeIdentical (Prog segMap segs) = Prog newSegMap newSegs
         newSegs = map (\(Segment i p c) -> Segment i p $ replaceC c)
             $ filter (\(Segment i _ _) -> i `Map.notMember` replaceMap) segs
 
+tailCallOpt :: Prog -> Prog
+tailCallOpt (Prog segMap segs) = Prog segMap $ map tco segs
+  where tco (Segment i p@(_:_) Ret) = case last p of
+            Call f -> Segment i (init p) (Always $ segMap Map.! f)
+            _ -> Segment i p Ret
+        tco s = s
+
+-- TODO: constant condition
+
 simplEmpty :: Prog -> Prog
 simplEmpty (Prog segMap segs) = Prog newMap newSegs
   where (Endo segTrans, Endo contTrans) = foldMap one segs
@@ -154,17 +163,8 @@ simplEmpty (Prog segMap segs) = Prog newMap newSegs
             )
         one _ = mempty
 
--- TODO: constant condition
-
-tailCallOpt :: Prog -> Prog
-tailCallOpt (Prog segMap segs) = Prog segMap $ map tco segs
-  where tco (Segment i p@(_:_) Ret) = case last p of
-            Call f -> Segment i (init p) (Always $ segMap Map.! f)
-            _ -> Segment i p Ret
-        tco s = s
-
 simplProg :: Prog -> Prog
-simplProg = tailCallOpt . simplEmpty . mergeIdentical . optProg
+simplProg = simplEmpty . tailCallOpt . mergeIdentical . optProg
   where optProg (Prog m ss) = Prog m $ map optSeg ss
         optSeg (Segment i p c) = Segment i (optPrim p) c
 
@@ -174,7 +174,7 @@ validateProg (Prog segMap segs) = all exists segMap && all goodSeg segs
         exists i = any (\(Segment i' _ _) -> i == i') segs
 
         goodCont :: Cont -> Bool
-        goodCont (IfC i e) = exists i && exists e
+        goodCont (IfC i e) = exists i && exists e && i != e
         goodCont (Always i) = exists i
         goodCont Ret = True
 

@@ -65,11 +65,11 @@ lowerDef (AST.Def _ _ _) = error "internal error: bad type"
 --  - Graph generation: [Def] -> Prog
 --  - Peephole opts on Prim
 --  - Merge identical segments, incl. simplifying IfC x x
---  - Simplification: remove empty Always, empty Ret
 --  - TODO Constant condition: IfC to Always
 --  - TCO: Ret that ends with Call -> Always
+--  - Simplification: remove empty Always, empty Ret
 -- In Layout:
---  - TODO Dead code elimination: remove unreachable segments
+--  - Dead code elimination: remove unreachable segments
 --  - TODO Layout: Select a single linear layout
 -- In CodeGen:
 --  - TODO Linear compiling: [Prim] -> [Instr Lit]
