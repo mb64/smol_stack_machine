@@ -1,7 +1,7 @@
 macro neg { not 1 + }
 macro sub { neg + }
-def upcase : ( int -- int ) { 32 sub }  
-def main : ( -- ) {                   
+def upcase : ( int -- int ) { 32 sub }
+def main : ( -- ) {
     'h' upcase send
     'i' upcase send
     '\n' send
