@@ -32,6 +32,8 @@ tokens :-
     "def"           {const TDef}
     "macro"         {const TMacro}
     "typedef"       {const TTypeDef}
+    "if"            {const TIf}
+    "ifelse"        {const TIfElse}
     "'"$identchar+  {TQuotedIdent . tail}
     $identchar+     {TIdent}
 
@@ -40,6 +42,7 @@ data Token = TDef | TMacro | TTypeDef
     | TOpenBrace | TCloseBrace
     | TOpenParen | TCloseParen
     | TStackSep | TColon
+    | TIf | TIfElse
     | TLit Integer
     | TIdent String
     | TQuotedIdent String

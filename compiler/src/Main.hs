@@ -6,6 +6,8 @@ import Lexer
 import Parser
 import AST
 import IR
+import IR.CFG
+import IR.CodeGen
 import Assembly
 
 compileProgram :: String -> Assembly

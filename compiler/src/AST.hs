@@ -28,6 +28,7 @@ data Atom (l :: Bool) where
     Lit :: Word8 -> Atom l
     LitName :: Ident -> Atom l
     Lambda :: Type -> Expr 'True -> Atom 'True
+    IfElse :: Expr l -> Expr l -> Atom l
 
 deriving instance Show (Atom l)
 deriving instance Eq (Atom l)
@@ -84,6 +85,7 @@ expandMacros defs = mapMaybe expandDef defs
         expandAtom (LitName n)
             | n `Map.member` macros = error $ "Cannot take address of macro " ++ n
             | otherwise = [LitName n]
+        expandAtom (IfElse ie ee) = [IfElse (expandExpr ie) (expandExpr ee)]
         expandAtom (Lambda t e) = [Lambda t $ expandExpr e]
         expandExpr = concatMap expandAtom
 
@@ -104,12 +106,13 @@ liftLambdas defs = snd $ execRWS (traverse_ go defs) () 0
         genName = do
             n <- get
             put $ n + 1
-            pure $ "<lambda #" ++ show n ++ ">"
+            pure $ "__lambda_" ++ show n
 
         goA :: Atom 'True -> RWS () [Def 'False 'False] Int (Atom 'False)
         goA (Name n) = pure $ Name n
         goA (Lit x) = pure $ Lit x
         goA (LitName n) = pure $ LitName n
+        goA (IfElse ie ee) = IfElse <$> traverse goA ie <*> traverse goA ee
         goA (Lambda t e) = do
             n <- genName
             go (Def n t e)

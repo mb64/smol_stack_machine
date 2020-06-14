@@ -24,6 +24,8 @@ import Lexer
     'def'   {TDef}
     'macro' {TMacro}
     'typedef' {TTypeDef}
+    'if'    {TIf}
+    'ifelse' {TIfElse}
     lit     {TLit $$}
     ident   {TIdent $$}
     quot    {TQuotedIdent $$}
@@ -38,10 +40,15 @@ Res     :: {[Def 'True 'True]}
 Lit     :: {Word8}
         : lit       {toWord $1}
 
+IfElse  :: {Atom 'True}
+        : '{' Expr '}' 'if'                     {IfElse $2 []}
+        | '{' Expr '}' '{' Expr '}' 'ifelse'    {IfElse $2 $5}
+
 Atom    :: {Atom 'True}
         : ident                 {Name $1}
         | quot                  {LitName $1}
         | Lit                   {Lit $1}
+        | IfElse                {$1}
         | '{' FunType Expr '}'  {Lambda $2 $3}
 
 Expr    :: {Expr 'True}

@@ -2,31 +2,23 @@
 
 module IR where
 
-import Control.Monad.State
-import Control.Monad.Writer
-import Data.Foldable
 import Data.List
-import Data.Word
 import Text.Read
 
 import qualified AST
 import AST (Ident)
-import qualified Assembly as Asm
-import Assembly (Assembly, Lit(..), Label(..))
+import Assembly (Lit(..), Label(..))
 
 data Prim = Send
           | Drop
           | Add
           | Not
-          | Call
-          | Ret
+          | Call String
+          | Lit Lit
           | Swap
           | Dup
           | Rot Int  -- Rot  3 : ( a b c -- b c a )
           | RotB Int -- RotB 3 : ( a b c -- c a b )
-          | Nop
-          | If
-          | IfElse
           deriving (Show, Eq, Ord)
 
 primName :: String -> Maybe Prim
@@ -34,20 +26,15 @@ primName "send" = Just Send
 primName "drop" = Just Drop
 primName "add" = Just Add
 primName "not" = Just Not
-primName "call" = Just Call
 primName "swap" = Just Swap
 primName "dup" = Just Dup
-primName "nop" = Just Nop
-primName "if" = Just If
-primName "ifelse" = Just IfElse
 primName name
     | "rot" `isPrefixOf` name = Rot <$> readMaybe (drop 3 name)
     | "rotb" `isPrefixOf` name = RotB <$> readMaybe (drop 4 name)
     | otherwise = Nothing
 
-data Atom = Lit Word8
-          | LitName Ident
-          | Prim Prim
+data Atom = Prim Prim
+          | IfElse Expr Expr
           deriving (Show, Eq, Ord)
 
 type Expr = [Atom]
@@ -56,138 +43,33 @@ data Def = Def Ident Expr
          deriving (Show, Eq, Ord)
 
 lowerDef :: AST.Def 'False 'False -> Def
-lowerDef (AST.Def n (AST.FunT ins outs) e) = Def n $ execWriter $ do
-    tell [Prim $ RotB $ length ins + 1]
-    traverse_ (tell . lowerA) e
-    tell [Prim $ Rot $ length outs + 1]
-    tell [Prim $ Ret]
-  where lowerA :: AST.Atom 'False -> Expr
+lowerDef (AST.Def n (AST.FunT ins outs) e) = Def n
+    $ [Prim $ RotB $ length ins + 1]
+    ++ map lowerA e
+    ++ [Prim $ Rot $ length outs + 1]
+  where lowerA :: AST.Atom 'False -> Atom
         lowerA (AST.Name name) = case primName name of
-            Just prim -> [Prim prim]
-            Nothing -> [LitName name, Prim Call]
-        lowerA (AST.Lit x) = [Lit x]
-        lowerA (AST.LitName name) = [LitName name]
+            Just prim -> Prim prim
+            Nothing -> Prim $ Call name
+        lowerA (AST.Lit x) = Prim $ Lit $ LitInt x
+        lowerA (AST.LitName name) = Prim $ Lit $ LitLbl $ Lbl name
+        lowerA (AST.IfElse ie ee) = IfElse (map lowerA ie) (map lowerA ee)
 lowerDef (AST.Def _ _ _) = error "internal error: bad type"
 
-type LblGenM = State Int
-
-genLbl :: LblGenM Label
-genLbl = state $ \n -> (GenLbl n, n+1)
-
-compileDef :: Def -> LblGenM Assembly
-compileDef (Def n e) = do
-    e' <- traverse compileA e
-    pure $ Left (Lbl n) : concat e'
-  where compileA :: Atom -> LblGenM Assembly
-        compileA (Lit x) = pure [Right $ Asm.Imm $ LitInt x]
-        compileA (LitName i) = pure [Right $ Asm.Imm $ LitLbl (Lbl i)]
-        compileA (Prim p) = compileP p
-
-        compileP :: Prim -> LblGenM Assembly
-        compileP Send = pure [Right Asm.Send]
-        compileP Drop = pure [Right Asm.Drop]
-        compileP Add = pure [Right Asm.Add]
-        compileP Not = pure [Right Asm.Not]
-        compileP Call = do
-            l <- genLbl
-            pure [ Right $ Asm.Imm (LitLbl l)
-                 , Right $ Asm.Swap
-                 , Right $ Asm.Jmp
-                 , Left l
-                 ]
-        compileP Ret = pure [Right Asm.Jmp]
-        compileP Swap = pure [Right Asm.Swap]
-        compileP Dup = pure [Right Asm.Dup]
-        compileP (Rot x)
-            | x <= 1 = pure []
-            | otherwise = pure . map Right
-                $ replicate (x - 2) Asm.Drop
-                ++ concat (replicate (x - 2) [Asm.Swap, Asm.Resurrect])
-                ++ [Asm.Swap]
-        compileP (RotB x)
-            | x <= 1 = pure []
-            | otherwise = pure . map Right
-                $ concat (replicate (x - 2) [Asm.Swap, Asm.Drop])
-                ++ [Asm.Swap]
-                ++ replicate (x - 2) Asm.Resurrect
-        compileP Nop = pure []
-        compileP If = do
-            l1 <- genLbl
-            l2 <- genLbl
-            pure [ Right $ Asm.Swap
-                 , Right $ Asm.Imm (LitLbl l1)
-                 , Right $ Asm.Swap
-                 , Right $ Asm.Skip
-                 , Right $ Asm.Jmp
-                 , Right $ Asm.Drop
-                 , Right $ Asm.Imm (LitLbl l2)
-                 , Right $ Asm.Swap
-                 , Right $ Asm.Jmp
-                 , Left l1
-                 , Right $ Asm.Drop
-                 , Left l2
-                 ]
-        compileP IfElse = do
-            l1 <- genLbl
-            pure [ Right $ Asm.Drop
-                 , Right $ Asm.Swap
-                 , Right $ Asm.Resurrect
-                 , Right $ Asm.Swap
-                 , Right $ Asm.Skip
-                 , Right $ Asm.Swap
-                 , Right $ Asm.Drop
-                 , Right $ Asm.Imm (LitLbl l1)
-                 , Right $ Asm.Swap
-                 , Right $ Asm.Jmp
-                 , Left l1
-                 ]
-
--- Rot  3 : ( a b c -- b c a )
--- RotB 3 : ( a b c -- c a b )
+-- IR -> Assembly
 --
---
--- Two options for compiling `if`:
---
--- *** chosen option for now
--- cond addr
--- addr cond    |   swap
--- addr cond l1 |   imm l1
--- addr l1 cond |   swap
--- addr l1      |   skip jmp
--- addr         |   drop
--- addr l2      |   imm l2
--- l2 addr      |   swap
--- l2           |   jmp
--- addr         | l1:
---              |   drop
---              | l2:
---
--- cond addr
--- addr cond    |   swap
--- addr cond l1 |   imm l1
--- addr l1 cond |   swap        \
--- addr l1      |   drop        | rot 3
--- l1 addr      |   swap        |
--- l1 addr cond |   resurrect   /
--- l1 addr not  |   not
--- l1 addr      |   skip jmp
--- l1           |   drop
---              |   drop
---              | l1:
---
--- The third option, and the most legit one, is to make a control flow graph,
--- and optimize everything there
---
--- `ifelse`:
---
--- cond if else
--- cond if [else]   |   drop        \
--- if cond [else]   |   swap        | rotb 3
--- if cond else     |   ressurect   |
--- if else cond     |   swap        /
--- ??? ???          |   skip swap
--- ???              |   drop
--- ??? l1           |   imm l1
--- l1 ???           |   swap
---                  |   jmp
---                  | l1:
+-- Passes:
+-- In CFG:
+--  - Graph generation: [Def] -> Prog
+--  - Peephole opts on Prim
+--  - Merge identical segments, incl. simplifying IfC x x
+--  - Simplification: remove empty Always, empty Ret
+--  - TODO Constant condition: IfC to Always
+--  - TCO: Ret that ends with Call -> Always
+-- In Layout:
+--  - TODO Dead code elimination: remove unreachable segments
+--  - TODO Layout: Select a single linear layout
+-- In CodeGen:
+--  - TODO Linear compiling: [Prim] -> [Instr Lit]
+--  - TODO Peephole opts on Instr Lit
+--  - TODO Branch glue: output Assembly

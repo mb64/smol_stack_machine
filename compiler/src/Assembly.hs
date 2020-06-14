@@ -1,12 +1,23 @@
 module Assembly where
 
+import Data.Bits
 import Data.Char
 import Data.Word
 
 data Lit = LitInt Word8
          | LitLbl Label
-         -- | LitArith Label (Word8 -> Word8)
+         | LitNot Lit
+         | LitAdd Lit Lit
+         -- | LitArith Label (Word8 -> Lit)
          deriving (Show, Eq, Ord)
+
+litNot :: Lit -> Lit
+litNot (LitInt x) = LitInt $ complement x
+litNot l = LitNot l
+
+litAdd :: Lit -> Lit -> Lit
+litAdd (LitInt x) (LitInt y) = LitInt $ x + y
+litAdd lx ly = LitAdd lx ly
 
 data Instr a = Send
              | Jmp
