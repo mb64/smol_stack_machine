@@ -38,6 +38,7 @@ data Routine = Routine { entrySeg :: SegId, segments :: [Segment]}
              deriving (Show, Eq, Ord)
 
 data Prog = Prog (Map.Map String SegId) [Segment]
+          deriving (Show, Eq, Ord)
 
 type SegIdGenM = State Int
 
