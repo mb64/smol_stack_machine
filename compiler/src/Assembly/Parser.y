@@ -21,13 +21,16 @@ import Assembly.Lexer
 %%
 
 Res     :: {Assembly}
-        :           {[]}
-        | Item Res  {[]}
+        :           {mempty}
+        | Label Res {oneLabel $1 <> $2}
+        | Instr Res {oneInstr $1 <> $2}
 
-Item    :: {Either Label (Instr Lit)}
-        : name ':'      {Left $ parseLbl $1}
-        | 'imm' name    {Right $ Imm $ LitLbl $ parseLbl $2}
-        | name          {Right $ parseInstr $ map toLower $1}
+Label   :: {Label}
+        : name ':'      {parseLbl $1}
+
+Instr   :: {Instr Lit}
+        : 'imm' name    {Imm $ LitLbl $ parseLbl $2}
+        | name          {parseInstr $ map toLower $1}
 
 {
 parseError :: [Token] -> a
@@ -51,5 +54,5 @@ parseInstr i = fromMaybe (error $ "unrecognized instruction " ++ i) $ tryParseIn
 
 -- TODO: should labels that are also instructions be allowed?
 parseLbl :: String -> Label
-parseLbl s = maybe s (const $ error $ s ++ " can't be a label, it's an instruction") $ tryParseInstr s
+parseLbl s = maybe s (const $ error $ s ++ " can't be a label, it's an instruction") $ tryParseInstr (map toLower s)
 }

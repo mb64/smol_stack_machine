@@ -1,5 +1,6 @@
 module Assembly where
 
+import Data.Bifunctor
 import Data.Bits
 import Data.Char
 import Data.Word
@@ -34,11 +35,32 @@ data Instr a = Send
 
 type Label = String
 
-type Assembly = [Either Label (Instr Lit)]
+data Assembly = Assembly [Instr Lit] [(Label, [Instr Lit])]
+              deriving (Show, Eq, Ord)
+
+instance Semigroup Assembly where
+    Assembly a [] <> Assembly b bs = Assembly (a ++ b) bs
+    Assembly a as <> Assembly [] bs = Assembly a (as ++ bs)
+    Assembly a as <> Assembly b bs = Assembly a (onLast (second (++b)) as ++ bs)
+      where onLast _ [] = error "last: empty list"
+            onLast f [x] = [f x]
+            onLast f (x:xs) = x:onLast f xs
+
+instance Monoid Assembly where
+    mempty = Assembly [] []
+
+oneInstr :: Instr Lit -> Assembly
+oneInstr i = Assembly [i] []
+
+oneLabel :: Label -> Assembly
+oneLabel l = Assembly [] [(l,[])]
 
 prettyPrintAsm :: Assembly -> String
-prettyPrintAsm = unlines . map one
-  where one (Left s) = s ++ ":"
-        one (Right (Imm (LitInt x))) = "    imm " ++ show x
-        one (Right (Imm (LitLbl s))) = "    imm " ++ s
-        one (Right i) = "    " ++ map toLower (show i)
+prettyPrintAsm (Assembly a as) = unlines $ map oneI a ++ map one as
+  where oneL s = s ++ ":"
+
+        oneI (Imm (LitInt x)) = "    imm " ++ show x
+        oneI (Imm (LitLbl s)) = "    imm " ++ s
+        oneI i = "    " ++ map toLower (show i)
+
+        one (l, is) = unlines $ oneL l : map oneI is
