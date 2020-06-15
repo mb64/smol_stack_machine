@@ -7,7 +7,7 @@ import Text.Read
 
 import qualified AST
 import AST (Ident)
-import Assembly (Lit(..), Label(..))
+import Assembly (Lit(..))
 
 data Prim = Send
           | Drop
@@ -54,7 +54,7 @@ lowerDef (AST.Def n (AST.FunT ins outs) e) = Def n
             Just prim -> Prim prim
             Nothing -> Prim $ Call name
         lowerA (AST.Lit x) = Prim $ Lit $ LitInt x
-        lowerA (AST.LitName name) = Prim $ Lit $ LitLbl $ Lbl name
+        lowerA (AST.LitName name) = Prim $ Lit $ LitLbl name
         lowerA (AST.IfElse ie ee) = IfElse (map lowerA ie) (map lowerA ee)
 lowerDef (AST.Def _ _ _) = error "internal error: bad type"
 

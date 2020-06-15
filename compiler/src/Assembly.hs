@@ -32,17 +32,13 @@ data Instr a = Send
              | Nop
              deriving (Show, Eq, Ord)
 
-data Label = Lbl String
-           | GenLbl Int
-           deriving (Show, Eq, Ord)
+type Label = String
 
 type Assembly = [Either Label (Instr Lit)]
 
 prettyPrintAsm :: Assembly -> String
 prettyPrintAsm = unlines . map one
-  where one (Left (Lbl s)) = s ++ ":"
-        one (Left (GenLbl n)) = ".l" ++ show n ++ ":"
+  where one (Left s) = s ++ ":"
         one (Right (Imm (LitInt x))) = "    imm " ++ show x
-        one (Right (Imm (LitLbl (Lbl s)))) = "    imm " ++ s
-        one (Right (Imm (LitLbl (GenLbl n)))) = "    imm .l" ++ show n
+        one (Right (Imm (LitLbl s))) = "    imm " ++ s
         one (Right i) = "    " ++ map toLower (show i)

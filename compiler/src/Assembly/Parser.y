@@ -49,7 +49,7 @@ tryParseInstr _ = Nothing
 parseInstr :: String -> Instr Lit
 parseInstr i = fromMaybe (error $ "unrecognized instruction " ++ i) $ tryParseInstr i
 
--- TODO: should labels like "drop" and "imm" be allowed?
+-- TODO: should labels that are also instructions be allowed?
 parseLbl :: String -> Label
-parseLbl s = maybe (Lbl s) (const $ error $ s ++ " can't be a label, it's an instruction") $ tryParseInstr s
+parseLbl s = maybe s (const $ error $ s ++ " can't be a label, it's an instruction") $ tryParseInstr s
 }
