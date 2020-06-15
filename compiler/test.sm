@@ -6,3 +6,8 @@ def main : ( -- ) {
     'i' upcase send
     '\n' send
 }
+
+def select : (int int int -- int) {
+    { swap } if
+    drop
+}

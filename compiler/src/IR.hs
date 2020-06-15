@@ -71,7 +71,8 @@ lowerDef (AST.Def _ _ _) = error "internal error: bad type"
 -- In Layout:
 --  - Dead code elimination: remove unreachable segments
 --  - Layout: Select a single linear layout
+--  - Segment renaming: rename them to go in order
 -- In CodeGen:
 --  - Linear compiling: [Prim] -> [Instr Lit]
---  - TODO Branch glue: output Assembly
 --  - TODO Peephole opts on Instr Lit
+--  - TODO Branch glue: output Assembly

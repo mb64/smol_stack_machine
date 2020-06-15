@@ -93,6 +93,10 @@ optPrim' (Swap:Swap:rest) = optPrim' rest
 optPrim' (Not:Not:rest) = optPrim' rest
 optPrim' (Rot x:RotB y:rest) | x == y = optPrim' rest
 optPrim' (RotB x:Rot y:rest) | x == y = optPrim' rest
+optPrim' (Rot x:rest) | x <= 1 = optPrim' rest
+optPrim' (RotB x:rest) | x <= 1 = optPrim' rest
+optPrim' (Rot 2:rest) = optPrim $ Swap:rest
+optPrim' (RotB 2:rest) = optPrim $ Swap:rest
 optPrim' (x:xs) = x:optPrim' xs
 optPrim' [] = []
 

@@ -1,4 +1,4 @@
-module IR.Layout (ProgLayout, layout) where
+module IR.Layout (ProgLayout(..), layout) where
 
 import Control.Monad.State
 import Data.Bifunctor
@@ -61,8 +61,8 @@ genTieredRefs =
         tierOne x (IfC i _) = if x == i then 2 else 3
         tierOne _ Ret = 4
 
-layout :: Prog -> ProgLayout
-layout (Prog nameMap segs) = ProgLayout nameMap segs'
+layout' :: Prog -> ProgLayout
+layout' (Prog nameMap segs) = ProgLayout nameMap segs'
   where initialSegMap = genSegMap $ Prog nameMap segs
         initialBackToFront = IMap.mapWithKey const initialSegMap
         tieredRefs = genTieredRefs $ concat initialSegMap
@@ -90,6 +90,22 @@ layout (Prog nameMap segs) = ProgLayout nameMap segs'
 
         segs' :: [Segment]
         segs' = groupForLocality $ toList endSegMap
+
+renameSegs :: ProgLayout -> ProgLayout
+renameSegs (ProgLayout nameMap segs) = ProgLayout (fmap rename nameMap) (map renameSeg segs)
+  where renameMap = IMap.fromList $ zip (map getId segs) [0..]
+        getId (Segment i _ _) = i
+
+        rename :: SegId -> SegId
+        rename x = renameMap IMap.! x
+
+        renameSeg :: Segment -> Segment
+        renameSeg (Segment i p (IfC a b)) = Segment (rename i) p (IfC (rename a) (rename b))
+        renameSeg (Segment i p (Always a)) = Segment (rename i) p (Always (rename a))
+        renameSeg (Segment i p Ret) = Segment (rename i) p Ret
+
+layout :: Prog -> ProgLayout
+layout = renameSegs . layout'
 
 -- general algorithm ideas:
 -- tiers of backreference priorities:

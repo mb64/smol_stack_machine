@@ -49,18 +49,21 @@ instance Semigroup Assembly where
 instance Monoid Assembly where
     mempty = Assembly [] []
 
+instrs :: [Instr Lit] -> Assembly
+instrs is = Assembly is []
+
 oneInstr :: Instr Lit -> Assembly
-oneInstr i = Assembly [i] []
+oneInstr i = instrs [i]
 
 oneLabel :: Label -> Assembly
 oneLabel l = Assembly [] [(l,[])]
 
 prettyPrintAsm :: Assembly -> String
-prettyPrintAsm (Assembly a as) = unlines $ map oneI a ++ map one as
+prettyPrintAsm (Assembly a as) = unlines $ map oneI a ++ concatMap one as
   where oneL s = s ++ ":"
 
         oneI (Imm (LitInt x)) = "    imm " ++ show x
         oneI (Imm (LitLbl s)) = "    imm " ++ s
         oneI i = "    " ++ map toLower (show i)
 
-        one (l, is) = unlines $ oneL l : map oneI is
+        one (l, is) = oneL l : map oneI is
