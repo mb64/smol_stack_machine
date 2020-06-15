@@ -1,13 +1,20 @@
 macro neg { not 1 + }
 macro sub { neg + }
-def upcase : ( int -- int ) { 32 sub }
+
+// Conditions are true if negative, so less than is just subtraction
+macro lt { sub }
+macro lte { 1 + sub }
+
+def upcase : ( int -- int ) {
+    dup 'a' lt {
+        dup 'z' lte {
+            32 sub
+        } if
+    } if
+}
+
 def main : ( -- ) {
     'h' upcase send
     'i' upcase send
-    '\n' send
-}
-
-def select : (int int int -- int) {
-    { swap } if
-    drop
+    '\n' upcase send
 }

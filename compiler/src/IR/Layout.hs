@@ -74,7 +74,10 @@ layout' (Prog nameMap segs) = ProgLayout nameMap segs'
         one (_, []) backToFront segMap = (backToFront, segMap)
         one (i, b:bs) backToFront segMap = case IMap.lookup i segMap of
             Just ss -> case IMap.updateLookupWithKey (\_ _ -> Nothing) b backToFront of
-                (Just f, btf') -> (btf', IMap.update (Just . (++ss)) f $ IMap.delete i segMap)
+                (Just f, btf') -> (
+                    IMap.update (const (Just f)) i btf',
+                    IMap.update (Just . (++ss)) f $ IMap.delete i segMap
+                    )
                 (Nothing, _) -> one (i, bs) backToFront segMap
             Nothing -> one (i, bs) backToFront segMap
 
