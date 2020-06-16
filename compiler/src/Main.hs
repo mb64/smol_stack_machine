@@ -6,10 +6,13 @@ import AST
 import IR
 import IR.CodeGen
 import Assembly
+import Assembly.Parser
 import Binary
 
-import System.IO
 import qualified Data.ByteString.Lazy as B
+import Data.Foldable
+import System.Environment
+import System.IO
 
 compileProgram :: String -> Assembly
 compileProgram prog = asm
@@ -17,11 +20,16 @@ compileProgram prog = asm
         ir = map lowerDef $ simplifyAst ast
         asm = compileIr ir
 
+singleFile :: String -> IO Assembly
+singleFile fileName = case dropWhile (/= '.') fileName of
+    ".sm" -> fmap compileProgram $ readFile fileName
+    ".s" -> fmap parseAssembly $ readFile fileName
+    e -> error $ "Unrecognized file extension: " ++ e
+
 main :: IO ()
--- main = interact $ prettyPrintAsm . compileProgram
 main = do
-    prog <- getContents
-    let asm = compileProgram prog
+    args <- getArgs
+    asm <- fmap fold $ traverse singleFile args
     putStr $ prettyPrintAsm asm
     let bin = assemble asm
     withFile "out.bin" WriteMode $ \h -> do

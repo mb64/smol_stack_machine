@@ -1,6 +1,6 @@
 {
 -- vim:ft=happy
-module Assembly.Parser (parse) where
+module Assembly.Parser (parseAssembly) where
 
 import Data.Char
 import Data.Maybe
@@ -17,6 +17,7 @@ import Assembly.Lexer
     ':'     {TColon}
     'imm'   {TImm}
     name    {TName $$}
+    lit     {TLit $$}
 
 %%
 
@@ -30,6 +31,7 @@ Label   :: {Label}
 
 Instr   :: {Instr Lit}
         : 'imm' name    {Imm $ LitLbl $ parseLbl $2}
+        | 'imm' lit     {Imm $ LitInt $2}
         | name          {parseInstr $ map toLower $1}
 
 {
@@ -55,4 +57,7 @@ parseInstr i = fromMaybe (error $ "unrecognized instruction " ++ i) $ tryParseIn
 -- TODO: should labels that are also instructions be allowed?
 parseLbl :: String -> Label
 parseLbl s = maybe s (const $ error $ s ++ " can't be a label, it's an instruction") $ tryParseInstr (map toLower s)
+
+parseAssembly :: String -> Assembly
+parseAssembly = parse . lexText
 }
