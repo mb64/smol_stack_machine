@@ -3,8 +3,8 @@ module IR.CodeGen (compileIr, compileLayout) where
 import Control.Monad.State
 import Data.Bifunctor
 import Data.Foldable
-import qualified Data.IntMap as IMap
-import qualified Data.Map as Map
+import qualified Data.IntMap.Strict as IMap
+import qualified Data.Map.Strict as Map
 
 import IR (Prim)
 import qualified IR
