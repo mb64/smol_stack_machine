@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveFunctor #-}
+
 module Assembly where
 
 import Data.Bifunctor
@@ -31,7 +33,7 @@ data Instr a = Send
              | Resurrect
              | Imm a
              | Nop
-             deriving (Show, Eq, Ord)
+             deriving (Show, Eq, Ord, Functor)
 
 type Label = String
 

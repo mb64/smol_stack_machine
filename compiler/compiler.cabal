@@ -15,10 +15,10 @@ build-type:          Simple
 
 executable compiler
   main-is:             Main.hs
-  other-modules:       Lexer, Parser, AST, IR, IR.CFG, IR.Layout, IR.CodeGen, Assembly, Assembly.Lexer, Assembly.Parser
+  other-modules:       Lexer, Parser, AST, IR, IR.CFG, IR.Layout, IR.CodeGen, Assembly, Assembly.Lexer, Assembly.Parser, Binary
   default-extensions:  DataKinds, KindSignatures, ScopedTypeVariables
   other-extensions:    StandaloneDeriving, GADTs, LambdaCase
-  build-depends:       base >=4.14 && <4.15, array >= 0.5, containers >= 0.6, transformers >= 0.5, mtl >= 2.2
+  build-depends:       base >=4.14 && <4.15, array >= 0.5, containers >= 0.6, transformers >= 0.5, mtl >= 2.2, bytestring
   build-tools:         alex, happy
   hs-source-dirs:      src
   ghc-options:         -Wall
