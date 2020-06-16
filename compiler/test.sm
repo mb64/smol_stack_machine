@@ -2,7 +2,7 @@ macro neg { not 1 + }
 macro sub { neg + }
 
 // Conditions are true if negative, so less than is just subtraction
-macro lt { sub }
+macro lt { - } // - is an alias for sub
 macro gt { swap lt }
 macro lte { 1 + lt }
 macro gte { 1 - gt }
@@ -10,7 +10,7 @@ macro gte { 1 - gt }
 def upcase : ( int -- int ) {
     dup 'a' gte {
         dup 'z' lte {
-            32 sub
+            32 -
         } if
     } if
 }

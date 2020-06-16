@@ -1,13 +1,14 @@
 # A small stack-based processor
 
-This project serves as a proof-of-concept for a larger 32-bit stack-based processor.
+This project serves as a proof-of-concept for an eventual larger 32-bit
+stack-based processor.
 
 Everything in this repository is MIT-licensed.
 
 ## Overview
 
  - Stack-based
- - No registers
+ - No registers, no RAM
  - Combined data and call stack
  - 8-bit words, 8-bit instructions, 8-bit IP
  - Harvard architecture
@@ -16,88 +17,63 @@ Everything in this repository is MIT-licensed.
 
 ## Instruction set
 
-```
-Byte    Name        Action/Comment
-----------------------------------
-0x00    send        ( value -- ) [value is sent to the screen]
-0x01    jmp         ( ip -- )
-0x02    skip        ( cond -- ) [ if cond & 0x80 then skip the next instruction byte ]
-0x03    drop        ( a -- )
-0x04    add         ( a b -- a + b )    [ALU]
-0x05    not         ( a -- ~a )         [ALU]
-0x06    swap        ( a b -- b a )      [ALU]
-0x07    dup         ( a -- a a )
-0x08    resurrect   ( -- a ) [See graveyard.md for specific semantics]
-0x09    imm         ( -- x ) [single-byte immediate follows the instruction]
-others  nop         ( -- )
-```
+*See `isa.md` for specifics.*
+
+The instructions are `send`, `jmp`, `skip`, `swap`, `dup`, `drop`, `add`,
+`not`, `imm`, and `resurrect`.
+
+They're mostly intuitive: `send` outputs a byte, `jmp` is an unconditional
+branch, and `skip` conditionally skips the next instruction byte.
+
+`resurrect` increments the stack pointer without writing new data, which is
+sometimes not UB. This makes it possible to implement stack permutations.
+See `graveyard.md` for specific semantics.
 
 I don't like `resurrect`, since it seems hacky, but with well-defined
 semantics, it's tolerable.
-It's the easiest way to make stack rotations possible.
 
 ## Goals
 
-The goal for this is a MVP stack-based processor, with:
- - A high-level concatenative assembler
+The goal for this is a MVP stack-based microprocessor, with:
+ - A low-level concatenative language and compiler
  - A virtual machine
  - A hardware FPGA implementation
 
+Maybe I'll add a [Sail ISA spec](https://www.cl.cam.ac.uk/~pes20/sail/) sometime, too
+
 ## Can it do the things?
 
-Yes! Despite the small number of instructions, it can do a surprising amount.
-
-### Function calls
-
-Call `f`:
-```
-    imm next
-    imm f
-    jmp
-next:
-```
-Since the address is on the stack, `ret` is just `jmp`.
-
-### Conditional jumps
+Yes! Here's an example program (`test.sm`):
 
 ```
-    ; Stack: condition
-    imm dest
-    swap
-    skip jmp
-    drop ; If jmp wasn't taken, get rid of the destination
+macro neg { not 1 + }
+macro sub { neg + }
+
+// Conditions are true if negative, so less than is just subtraction
+macro lt { - } // - is an alias for sub
+macro gt { swap lt }
+macro lte { 1 + lt }
+macro gte { 1 - gt }
+
+def upcase : ( int -- int ) {
+    dup 'a' gte {
+        dup 'z' lte {
+            32 -
+        } if
+    } if
+}
+
+def main : ( -- ) {
+    'h' upcase send
+    'i' upcase send
+    '\n' upcase send
+}
 ```
 
-### Conditionally choose a value
-
-```
-    ; Stack: A B condition
-    skip swap
-    drop
-    ; Stack: condition ? B : A
-```
-
-### Rot3
-
-```
-    ; Stack: A B C
-    swap    ; Stack: A C B
-    drop    ; Stack: A C [B]
-    swap    ; Stack: C A [B]
-    resurrect
-    ; Stack: C A B
-```
-The other direction is done similarly.
-
-### Subtraction
-
-Subtraction is just adding the inverse
-
-```
-    ; Stack: A B
-    not
-    ; Stack: A ~B
-    imm 1 add
-    ; Stack: A -B
-    add
+Compile and run in the VM:
+```shell
+$ cd compiler ; cabal new-run compiler startup.s test.sm > /dev/null
+$ # generated out.bin
+$ cd ../vm ; cargo run -- ../compiler/out.bin
+HI
 ```
