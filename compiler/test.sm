@@ -7,4 +7,16 @@ macro gt { swap lt }
 macro lte { 1 + lt }
 macro gte { 1 - gt }
 
-def loop : ( -- ) { loop }
+def upcase : ( int -- int ) {
+    dup 'a' gte {
+        dup 'z' lte {
+            32 -
+        } if
+    } if
+}
+
+def main : ( -- ) {
+    'h' upcase send
+    'I' upcase send
+    '\n' upcase send
+}
