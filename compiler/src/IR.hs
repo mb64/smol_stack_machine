@@ -1,5 +1,3 @@
-{-# LANGUAGE DataKinds #-}
-
 module IR where
 
 import Data.List

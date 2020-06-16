@@ -1,6 +1,5 @@
 {
 -- vim:ft=happy
-{-# LANGUAGE DataKinds #-}
 
 module Parser (parse) where
 
