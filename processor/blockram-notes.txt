@@ -1,0 +1,7 @@
+
+
+RAMB36E1 or RAMB18E1
+
+want WRITE_FIRST mode (default)
+
+7 Series FPGAs Libraries Guide (ug953) has code
