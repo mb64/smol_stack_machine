@@ -1,0 +1,3 @@
+# It doesn't know about Alex/Happy specifically, so just say they're Haskell
+*.y linguist-language=Haskell
+*.x linguist-language=Haskell
