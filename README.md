@@ -35,13 +35,19 @@ semantics, it's tolerable.
 ## Goals
 
 The goal for this is a MVP stack-based microprocessor, with:
- - A low-level concatenative language and compiler
- - A virtual machine
- - A hardware FPGA implementation
+ - A low-level concatenative language and compiler (backend done, frontend in progress)
+ - A virtual machine (done, poorly)
+ - A hardware FPGA implementation (in progress)
 
 Maybe I'll add a [Sail ISA spec](https://www.cl.cam.ac.uk/~pes20/sail/) sometime, too
 
-## Can it do the things?
+## Can it do all the things?
+
+No! It's only got 256 instruction bytes, since all jumps are 8-bit. And even if
+it were unbounded, it still wouldn't be Turing complete. It's equivalent in
+computability class to a push-down automaton.
+
+## Can it do *some* of the things?
 
 Yes! Here's an example program (`test.sm`):
 
